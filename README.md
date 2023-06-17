@@ -15,12 +15,19 @@ To better reproduce experiment results, we suggest an NVIDIA GPU with compute ca
 Our test programs currently support input files encoded using the matrix market format. All matrix market datasets used in this evaluation are publicly available from the SuiteSparse Matrix Collection.
 
 1. The command 'make xxx' generates an executable file.
+
 `make double`
+
 `make half`
+
 2. Run code on matrix data. Running the program requires one parameter: matrix path.
+
 `./spmv_double matrix.mtx`
+
 3. Example
+
 `cd test`
+
 `sh run_double.sh`
 
 ## Contact us
