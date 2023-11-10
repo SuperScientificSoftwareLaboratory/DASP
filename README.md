@@ -16,7 +16,7 @@ Sparse matrix-vector multiplication (SpMV) plays a key role in computational sci
 
 To better reproduce experiment results, we suggest an NVIDIA GPU with compute capability 8.0. DASP evaluation requires the CUDA GPU driver, the nvcc CUDA compiler, and the cuSPARSE library, all of them are included with the CUDA Toolkit. 
 
-## Execution of DASP
+## Execution
 
 Our test programs currently support input files encoded using the matrix market format. All matrix market datasets used in this evaluation are publicly available from the SuiteSparse Matrix Collection.
 
