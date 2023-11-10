@@ -3,7 +3,7 @@ Specific Dense Matrix Multiply-Accumulate Units Accelerated General Sparse Matri
 
 ## Paper
 
-This is the code of our paper published at SC23:
+This is the code of our paper published at SC '23:
 
 Yuechen Lu and Weifeng Liu. 2023. DASP: Specific Dense Matrix Multiply-Accumulate Units Accelerated General Sparse Matrix-Vector Multiplication. In Proceedings of the International Conference for High Performance Computing, Networking, Storage and Analysis (SC '23). Association for Computing Machinery, New York, NY, USA, Article 73, 1–14. https://doi.org/10.1145/3581784.3607051
 
