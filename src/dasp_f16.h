@@ -1510,9 +1510,12 @@ __host__ void spmv_all(char *filename, MAT_VAL_TYPE *csrValA, MAT_PTR_TYPE *csrR
     cudaFuncSetAttribute(dasp_spmv2<1>, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
     cudaFuncSetAttribute(dasp_spmv2<2>, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
     cudaFuncSetAttribute(dasp_spmv2<4>, cudaFuncAttributePreferredSharedMemoryCarveout, carveout);
+    
+    int warmup_time = 100;
+    int execute_time = 1000;
     if (rowloop == 1)
     {
-        for (int i = 0; i < 100; ++i)
+        for (int i = 0; i < warmup_time; ++i)
         {
             dasp_spmv<1><<<BlockNum_all, ThreadNum_all>>>(dX_val, dY_val, 
                                                     dlong_val, dlong_cid, dval_by_warp, dlong_ptr_warp, row_long,
@@ -1524,7 +1527,7 @@ __host__ void spmv_all(char *filename, MAT_VAL_TYPE *csrValA, MAT_PTR_TYPE *csrR
         }
         cudaDeviceSynchronize();
         gettimeofday(&t1, NULL);
-        for (int i = 0; i < 1000; ++i)
+        for (int i = 0; i < execute_time; ++i)
         {    
             dasp_spmv<1><<<BlockNum_all, ThreadNum_all>>>(dX_val, dY_val, 
                                                     dlong_val, dlong_cid, dval_by_warp, dlong_ptr_warp, row_long,
@@ -1536,7 +1539,7 @@ __host__ void spmv_all(char *filename, MAT_VAL_TYPE *csrValA, MAT_PTR_TYPE *csrR
         }
         cudaDeviceSynchronize();
         gettimeofday(&t2, NULL);
-        for (int i = 0; i < 1000; ++i)
+        for (int i = 0; i < execute_time; ++i)
         {    
             dasp_spmv2<1><<<BlockNum_all, ThreadNum_all>>>(dX_val, dY_val, 
                                                     dlong_val, dlong_cid, dval_by_warp, dlong_ptr_warp, row_long,
@@ -1552,7 +1555,7 @@ __host__ void spmv_all(char *filename, MAT_VAL_TYPE *csrValA, MAT_PTR_TYPE *csrR
     }
     else if (rowloop == 2)
     {
-        for (int i = 0; i < 100; ++i)
+        for (int i = 0; i < warmup_time; ++i)
         {
             dasp_spmv<2><<<BlockNum_all, ThreadNum_all>>>(dX_val, dY_val, 
                                                     dlong_val, dlong_cid, dval_by_warp, dlong_ptr_warp, row_long,
@@ -1564,7 +1567,7 @@ __host__ void spmv_all(char *filename, MAT_VAL_TYPE *csrValA, MAT_PTR_TYPE *csrR
         }
         cudaDeviceSynchronize();
         gettimeofday(&t1, NULL);
-        for (int i = 0; i < 1000; ++i)
+        for (int i = 0; i < execute_time; ++i)
         {    
             dasp_spmv<2><<<BlockNum_all, ThreadNum_all>>>(dX_val, dY_val, 
                                                     dlong_val, dlong_cid, dval_by_warp, dlong_ptr_warp, row_long,
@@ -1576,7 +1579,7 @@ __host__ void spmv_all(char *filename, MAT_VAL_TYPE *csrValA, MAT_PTR_TYPE *csrR
         }
         cudaDeviceSynchronize();
         gettimeofday(&t2, NULL);
-        for (int i = 0; i < 1000; ++i)
+        for (int i = 0; i < execute_time; ++i)
         {    
             dasp_spmv2<2><<<BlockNum_all, ThreadNum_all>>>(dX_val, dY_val, 
                                                     dlong_val, dlong_cid, dval_by_warp, dlong_ptr_warp, row_long,
@@ -1591,7 +1594,7 @@ __host__ void spmv_all(char *filename, MAT_VAL_TYPE *csrValA, MAT_PTR_TYPE *csrR
     }
     else
     {
-        for (int i = 0; i < 100; ++i)
+        for (int i = 0; i < warmup_time; ++i)
         {
             dasp_spmv<4><<<BlockNum_all, ThreadNum_all>>>(dX_val, dY_val, 
                                                     dlong_val, dlong_cid, dval_by_warp, dlong_ptr_warp, row_long,
@@ -1603,7 +1606,7 @@ __host__ void spmv_all(char *filename, MAT_VAL_TYPE *csrValA, MAT_PTR_TYPE *csrR
         }
         cudaDeviceSynchronize();
         gettimeofday(&t1, NULL);
-        for (int i = 0; i < 1000; ++i)
+        for (int i = 0; i < execute_time; ++i)
         {    
             dasp_spmv<4><<<BlockNum_all, ThreadNum_all>>>(dX_val, dY_val, 
                                                     dlong_val, dlong_cid, dval_by_warp, dlong_ptr_warp, row_long,
@@ -1615,7 +1618,7 @@ __host__ void spmv_all(char *filename, MAT_VAL_TYPE *csrValA, MAT_PTR_TYPE *csrR
         }
         cudaDeviceSynchronize();
         gettimeofday(&t2, NULL);
-        for (int i = 0; i < 1000; ++i)
+        for (int i = 0; i < execute_time; ++i)
         {    
             dasp_spmv2<4><<<BlockNum_all, ThreadNum_all>>>(dX_val, dY_val, 
                                                     dlong_val, dlong_cid, dval_by_warp, dlong_ptr_warp, row_long,
@@ -1629,9 +1632,9 @@ __host__ void spmv_all(char *filename, MAT_VAL_TYPE *csrValA, MAT_PTR_TYPE *csrR
         gettimeofday(&t3, NULL);
     }
 
-    double dasp_time = ((t2.tv_sec - t1.tv_sec) * 1000.0 + (t2.tv_usec - t1.tv_usec) / 1000.0) / 1000; 
+    double dasp_time = ((t2.tv_sec - t1.tv_sec) * 1000.0 + (t2.tv_usec - t1.tv_usec) / 1000.0) / execute_time; 
     double dasp_gflops = (double)((long)nnzA * 2) / (dasp_time * 1e6);
-    double dasp_time_bypass = ((t3.tv_sec - t2.tv_sec) * 1000.0 + (t3.tv_usec - t2.tv_usec) / 1000.0) / 1000; 
+    double dasp_time_bypass = ((t3.tv_sec - t2.tv_sec) * 1000.0 + (t3.tv_usec - t2.tv_usec) / 1000.0) / execute_time; 
     double dasp_gflops_bypass = (double)((long)nnzA * 2) / (dasp_time_bypass * 1e6);
     double dasp_bandwidth1 = (double)data_X / (dasp_time_bypass * 1e6);
     double dasp_bandwidth2 = (double)data_X2 / (dasp_time_bypass * 1e6);
