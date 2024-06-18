@@ -50,6 +50,30 @@ __device__ __forceinline__ int load_int_from_global(const int* a)
     return r;
 }
 
+__global__ void longPart_sum(int *dlongA_rpt, MAT_VAL_TYPE *dwarp_val, MAT_VAL_TYPE *dY_val, int row_long)
+{
+    int bid = blockIdx.x;
+    int tid = threadIdx.x;
+    int laneid = 31 & tid;
+    int global_warpid = bid * warpNum_long + (tid >> 5);
+
+    if (global_warpid >= row_long) return;
+
+    int offset_longA = load_int_from_global(dlongA_rpt + global_warpid);
+    MAT_VAL_TYPE *cur_temp_val = dwarp_val + offset_longA;
+    int len = load_int_from_global(dlongA_rpt + global_warpid + 1) - offset_longA;
+
+    MAT_VAL_TYPE thread_val = 0;
+    for (int i = laneid; i < len; i += WARP_SIZE)
+    {
+        thread_val += load_double_from_global(cur_temp_val + i);
+    }
+    thread_val = warpReduceSum(thread_val);
+
+    if (laneid == 0)
+        store_double_to_global(dY_val + global_warpid, thread_val);
+}
+
 template <int rowloop>  // this parameter must be 1 or 2 or 4
 __global__ void dasp_spmv2(MAT_VAL_TYPE *dX_val, MAT_VAL_TYPE *dY_val,
                           MAT_VAL_TYPE *dlongA_val, int *dlongA_cid, MAT_VAL_TYPE *dwarp_val, MAT_PTR_TYPE *dlongA_rpt, int row_long,
@@ -100,22 +124,22 @@ __global__ void dasp_spmv2(MAT_VAL_TYPE *dX_val, MAT_VAL_TYPE *dY_val,
         if (laneid == 0) 
             store_double_to_global(dwarp_val + global_warpid, fragC[0]);
 
-        if (global_warpid >= row_long) return;
+        // if (global_warpid >= row_long) return;
 
-        // MAT_VAL_TYPE *cur_temp_val = dwarp_val + dlongA_rpt[global_warpid];
-        int offset_longA = load_int_from_global(dlongA_rpt + global_warpid);
-        MAT_VAL_TYPE *cur_temp_val = dwarp_val + offset_longA;
-        int len = load_int_from_global(dlongA_rpt + global_warpid + 1) - offset_longA;
+        // // MAT_VAL_TYPE *cur_temp_val = dwarp_val + dlongA_rpt[global_warpid];
+        // int offset_longA = load_int_from_global(dlongA_rpt + global_warpid);
+        // MAT_VAL_TYPE *cur_temp_val = dwarp_val + offset_longA;
+        // int len = load_int_from_global(dlongA_rpt + global_warpid + 1) - offset_longA;
 
-        MAT_VAL_TYPE thread_val = 0;
-        for (int i = laneid; i < len; i += WARP_SIZE)
-        {
-            thread_val += load_double_from_global(cur_temp_val + i);
-        }
-        thread_val = warpReduceSum(thread_val);
+        // MAT_VAL_TYPE thread_val = 0;
+        // for (int i = laneid; i < len; i += WARP_SIZE)
+        // {
+        //     thread_val += load_double_from_global(cur_temp_val + i);
+        // }
+        // thread_val = warpReduceSum(thread_val);
 
-        if (laneid == 0)
-            store_double_to_global(dY_val + global_warpid, thread_val);
+        // if (laneid == 0)
+        //     store_double_to_global(dY_val + global_warpid, thread_val);
 
     }
     else if (bid >= offset_reg && bid < offset_short1)
@@ -1187,6 +1211,8 @@ __host__ void spmv_all(char *filename, MAT_VAL_TYPE *csrValA, MAT_PTR_TYPE *csrR
     int BlockNum_all = BlockNum_long + BlockNum + BlockNum_short;
     int ThreadNum_all = 4 * WARP_SIZE;
 
+    int sumBlockNum = (row_long + 3) / 4;
+
     // printf("1:%d, 13:%d, 34:%d, 22:%d\n", BlockNum_short_1, BlockNum_short_13, BlockNum_short_34, BlockNum_short_22);
     
     MAT_VAL_TYPE *dX_val, *dY_val;
@@ -1283,6 +1309,14 @@ __host__ void spmv_all(char *filename, MAT_VAL_TYPE *csrValA, MAT_PTR_TYPE *csrR
                                                     fill0_nnz_short13, fill0_nnz_short34);
         }
         cudaDeviceSynchronize();
+        if (row_long)
+        {
+            for (int i = 0; i < execute_time; ++i)
+            {
+                longPart_sum<<<sumBlockNum, ThreadNum_all>>>(dlong_ptr_warp, dval_by_warp, dY_val, row_long);
+            }
+            cudaDeviceSynchronize();
+        }
         gettimeofday(&t2, NULL);
     }
     else if (rowloop == 2)
@@ -1310,6 +1344,14 @@ __host__ void spmv_all(char *filename, MAT_VAL_TYPE *csrValA, MAT_PTR_TYPE *csrR
                                                     fill0_nnz_short13, fill0_nnz_short34);
         }
         cudaDeviceSynchronize();
+        if (row_long)
+        {
+            for (int i = 0; i < execute_time; ++i)
+            {
+                longPart_sum<<<sumBlockNum, ThreadNum_all>>>(dlong_ptr_warp, dval_by_warp, dY_val, row_long);
+            }
+            cudaDeviceSynchronize();
+        }
         gettimeofday(&t2, NULL);
     }
     else
@@ -1337,6 +1379,14 @@ __host__ void spmv_all(char *filename, MAT_VAL_TYPE *csrValA, MAT_PTR_TYPE *csrR
                                                     fill0_nnz_short13, fill0_nnz_short34);
         }
         cudaDeviceSynchronize();
+        if (row_long)
+        {
+            for (int i = 0; i < execute_time; ++i)
+            {
+                longPart_sum<<<sumBlockNum, ThreadNum_all>>>(dlong_ptr_warp, dval_by_warp, dY_val, row_long);
+            }
+            cudaDeviceSynchronize();
+        }
         gettimeofday(&t2, NULL);
     }
     
